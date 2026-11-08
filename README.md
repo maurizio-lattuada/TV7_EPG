@@ -76,8 +76,7 @@ The Init7 EPG API (`api.tv.init7.net`) requires authentication. Requests from In
 customer connections are accepted without a login; everything else, including GitHub's own
 runners, gets **HTTP 403** `{"detail":"Authentication credentials were not provided."}`. The generation step therefore runs
 on a **self-hosted runner on a Mac connected through Init7** (labels `self-hosted`, `macOS`).
-Tests and the Pages deployment still run on GitHub-hosted runners. The manual workflow
-*Diagnose Init7 API access* shows what the API answers to a GitHub-hosted runner.
+Tests and the Pages deployment still run on GitHub-hosted runners.
 
 ### One-time setup
 
