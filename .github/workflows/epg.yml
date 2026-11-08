@@ -1,5 +1,9 @@
 name: Build and publish EPG
 
+# The Init7 EPG API rejects requests from outside Init7 / Swiss networks (HTTP 403),
+# so the guide is generated on a self-hosted runner on an Init7 connection. Tests
+# and the Pages deployment run on GitHub-hosted runners.
+
 on:
   schedule:
     - cron: "0 0 * * *" # every day at 00:00 UTC (GitHub may start it a few minutes late)
@@ -31,21 +35,32 @@ jobs:
 
   build:
     needs: test
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    # Never run pull request code on the self-hosted machine: only main.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Check uv
+        run: |
+          if ! command -v uv >/dev/null; then
+            echo "::error::uv not found on the runner's PATH. Install uv and restart the runner service."
+            exit 1
+          fi
+          uv --version
       - id: pages
         uses: actions/configure-pages@v6
       - name: Generate guide and playlist
-        run: python -m tv7_epg --output-dir dist --base-url "${{ steps.pages.outputs.base_url }}"
-      - uses: actions/upload-pages-artifact@v5
+        run: |
+          rm -rf dist
+          uv run --no-dev --python "$PYTHON_VERSION" python -m tv7_epg \
+            --output-dir dist --base-url "${{ steps.pages.outputs.base_url }}"
+      - uses: actions/upload-artifact@v7
         with:
+          name: epg
           path: dist
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     needs: build
@@ -57,5 +72,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: epg
+          path: dist
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v5

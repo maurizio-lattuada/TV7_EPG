@@ -42,6 +42,7 @@ def collect_programmes(
     """Download all channels in parallel and keep the programmes inside ``window``."""
     collected: dict[tuple[str, datetime], Programme] = {}
     failed: list[str] = []
+    errors: list[FetchError] = []
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(client.fetch_programmes, channel): channel for channel in channels}
@@ -51,6 +52,7 @@ def collect_programmes(
                 programmes = future.result()
             except FetchError as error:
                 failed.append(channel.id)
+                errors.append(error)
                 log.warning("Channel %s failed: %s", channel.id, error)
                 continue
             kept = 0
@@ -62,6 +64,16 @@ def collect_programmes(
             log.info("[%3d/%d] %-28s %5d programmes", done, len(channels), channel.id, kept)
 
     if channels and len(failed) / len(channels) > max_failure_ratio:
+        forbidden = [error for error in errors if error.status == 403]
+        if len(forbidden) == len(errors):
+            sample = next((error.body for error in forbidden if error.body), None)
+            raise GenerationError(
+                f"Access denied (HTTP 403) for {len(failed)} of {len(channels)} channels. "
+                "The Init7 EPG API only answers requests from Init7 / Swiss networks, so this "
+                "machine's public IP address is probably blocked. Run the generator from a "
+                "computer on an Init7 connection (e.g. the self-hosted GitHub runner)."
+                + (f" Server response: {sample[:300]}" if sample else "")
+            )
         raise GenerationError(
             f"{len(failed)} of {len(channels)} channels failed, above the allowed "
             f"{max_failure_ratio:.0%}: {', '.join(sorted(failed))}"
@@ -112,7 +124,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("-o", "--output-dir", type=Path, default=Path("dist"))
     parser.add_argument("--days-back", type=int, default=1, help="full days before today (default: 1)")
-    parser.add_argument("--days-ahead", type=int, default=3, help="full days after today (default: 3)")
+    parser.add_argument("--days-ahead", type=int, default=30, help="full days after today (default: 30)")
     parser.add_argument("--timezone", default=DEFAULT_TIMEZONE, help=f"defines 'today' (default: {DEFAULT_TIMEZONE})")
     parser.add_argument("--base-url", help="public URL the files are served from; enables url-tvg in the playlist")
     parser.add_argument("--channel", action="append", dest="channels", metavar="ID", help="only this channel id (repeatable)")

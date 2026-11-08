@@ -11,15 +11,17 @@ from tv7_epg.models import Programme
 
 
 class FakeClient:
-    def __init__(self, failing=()):
+    def __init__(self, failing=(), status=None, body=None):
         self.failing = set(failing)
+        self.status = status
+        self.body = body
 
     def fetch_playlist(self):
         return SAMPLE_M3U
 
     def fetch_programmes(self, channel):
         if channel.id in self.failing:
-            raise FetchError("boom")
+            raise FetchError("boom", status=self.status, body=self.body)
         now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
         slots = [now - timedelta(days=10), now, now, now + timedelta(hours=1)]  # one too old, one duplicate
         return [
@@ -64,3 +66,24 @@ def test_too_many_failures_abort_without_output(tmp_path):
     with pytest.raises(cli.GenerationError):
         cli.run(_args(tmp_path), client=FakeClient(failing={"RTS1.ch", "SRF1.ch"}))
     assert not (tmp_path / "epg.xml").exists()
+
+
+ALL_CHANNELS = {"SRF1.ch", "RTS1.ch", "AlJazeera.qa", "TRTTurkAvrupa"}
+
+
+def test_access_denied_gets_a_dedicated_message(tmp_path):
+    client = FakeClient(failing=ALL_CHANNELS, status=403, body="Forbidden: country not allowed")
+    with pytest.raises(cli.GenerationError, match=r"Access denied \(HTTP 403\) for 4 of 4 channels") as info:
+        cli.run(_args(tmp_path), client=client)
+    assert "Init7 connection" in str(info.value)
+    assert "Server response: Forbidden: country not allowed" in str(info.value)
+
+
+def test_mixed_failures_keep_the_generic_message(tmp_path):
+    with pytest.raises(cli.GenerationError, match="channels failed, above the allowed"):
+        cli.run(_args(tmp_path), client=FakeClient(failing=ALL_CHANNELS, status=500))
+
+
+def test_default_window_is_thirty_days_ahead():
+    args = cli.build_parser().parse_args([])
+    assert (args.days_back, args.days_ahead) == (1, 30)

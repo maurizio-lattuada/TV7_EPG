@@ -30,6 +30,22 @@ _PAGE_SIZE = 1000
 class FetchError(RuntimeError):
     """Raised when a resource could not be downloaded after all retries."""
 
+    def __init__(self, message: str, *, status: int | None = None, body: str | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+        """HTTP status code, if the server answered at all."""
+        self.body = body
+        """Start of the error response body, useful for diagnostics."""
+
+
+def _error_body(error: urllib.error.HTTPError, limit: int = 500) -> str | None:
+    try:
+        raw = error.read(limit)
+    except Exception:  # the body is best-effort diagnostics only
+        return None
+    text = raw.decode("utf-8", errors="replace").strip()
+    return " ".join(text.split()) or None
+
 
 class Init7Client:
     def __init__(
@@ -60,7 +76,11 @@ class Init7Client:
                     return response.read()
             except urllib.error.HTTPError as error:
                 if error.code not in _RETRYABLE_STATUS:
-                    raise FetchError(f"GET {url} failed with HTTP {error.code}") from error
+                    raise FetchError(
+                        f"GET {url} failed with HTTP {error.code}",
+                        status=error.code,
+                        body=_error_body(error),
+                    ) from error
                 last_error = error
             except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
                 last_error = error
