@@ -1,7 +1,7 @@
 name: Diagnose Init7 API access
 
 # One-off, manual check: shows what the Init7 servers answer to a GitHub-hosted
-# runner (which is outside Init7 / Switzerland). Safe to delete once no longer needed.
+# runner (which is not on an Init7 connection). Safe to delete once no longer needed.
 
 on:
   workflow_dispatch:

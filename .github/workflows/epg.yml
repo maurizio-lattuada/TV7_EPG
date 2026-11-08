@@ -1,6 +1,6 @@
 name: Build and publish EPG
 
-# The Init7 EPG API rejects requests from outside Init7 / Swiss networks (HTTP 403),
+# The Init7 EPG API rejects requests from outside Init7 customer connections (HTTP 403),
 # so the guide is generated on a self-hosted runner on an Init7 connection. Tests
 # and the Pages deployment run on GitHub-hosted runners.
 

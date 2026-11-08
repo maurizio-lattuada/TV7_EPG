@@ -72,8 +72,9 @@ only run the tests. The generated files are never committed, so the repository s
 
 ### Why a self-hosted runner
 
-The Init7 EPG API (`api.tv.init7.net`) answers **HTTP 403** to requests from outside
-Init7 / Swiss networks, including GitHub's own runners. The generation step therefore runs
+The Init7 EPG API (`api.tv.init7.net`) requires authentication. Requests from Init7
+customer connections are accepted without a login; everything else, including GitHub's own
+runners, gets **HTTP 403** `{"detail":"Authentication credentials were not provided."}`. The generation step therefore runs
 on a **self-hosted runner on a Mac connected through Init7** (labels `self-hosted`, `macOS`).
 Tests and the Pages deployment still run on GitHub-hosted runners. The manual workflow
 *Diagnose Init7 API access* shows what the API answers to a GitHub-hosted runner.

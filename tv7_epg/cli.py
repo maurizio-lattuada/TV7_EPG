@@ -69,9 +69,10 @@ def collect_programmes(
             sample = next((error.body for error in forbidden if error.body), None)
             raise GenerationError(
                 f"Access denied (HTTP 403) for {len(failed)} of {len(channels)} channels. "
-                "The Init7 EPG API only answers requests from Init7 / Swiss networks, so this "
-                "machine's public IP address is probably blocked. Run the generator from a "
-                "computer on an Init7 connection (e.g. the self-hosted GitHub runner)."
+                "The Init7 EPG API requires authentication and only accepts unauthenticated "
+                "requests from Init7 customer connections, so this machine's network is not "
+                "allowed. Run the generator from a computer on an Init7 connection (e.g. the "
+                "self-hosted GitHub runner)."
                 + (f" Server response: {sample[:300]}" if sample else "")
             )
         raise GenerationError(
