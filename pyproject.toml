@@ -1,0 +1,24 @@
+[project]
+name = "tv7-epg"
+version = "1.0.0"
+description = "Builds a Kodi-compatible XMLTV programme guide and M3U playlist for Init7 TV7."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+tv7-epg = "tv7_epg.cli:main"
+
+[dependency-groups]
+dev = ["pytest==9.2.0"]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tv7_epg*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
