@@ -1,15 +1,15 @@
 # TV7 EPG for Kodi
 
 Generates an [XMLTV](https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd) programme guide
-and a matching M3U playlist for [Init7 TV7](https://www.init7.net/), ready for Kodi's
-**PVR IPTV Simple Client**. A GitHub Actions job rebuilds both files every night and
+and a matching M3U playlist for [Init7 TV7](https://www.init7.net/), ready for Kodi's **PVR IPTV Simple Client**. A
+GitHub Actions job rebuilds both files every night and
 publishes them on GitHub Pages.
 
-| File | URL |
-|------|-----|
-| Guide (gzip, recommended) | https://maurizio-lattuada.github.io/TV7_EPG/epg.xml.gz |
-| Guide (plain XML) | https://maurizio-lattuada.github.io/TV7_EPG/epg.xml |
-| Playlist | https://maurizio-lattuada.github.io/TV7_EPG/playlist.m3u |
+| File                      | URL                                                      |
+|---------------------------|----------------------------------------------------------|
+| Guide (gzip, recommended) | https://maurizio-lattuada.github.io/TV7_EPG/epg.xml.gz   |
+| Guide (plain XML)         | https://maurizio-lattuada.github.io/TV7_EPG/epg.xml      |
+| Playlist                  | https://maurizio-lattuada.github.io/TV7_EPG/playlist.m3u |
 
 ## What it covers
 
@@ -28,12 +28,12 @@ publishes them on GitHub Pages.
 
 1. Install **PVR IPTV Simple Client** from *Add-ons → Install from repository → PVR clients*.
 2. Open its *Configure* dialog:
-   * **General:** set *Location* to *Remote path (Internet address)* and *M3U playlist URL*
-     to `https://maurizio-lattuada.github.io/TV7_EPG/playlist.m3u`.
-   * **EPG:** set *Location* to *Remote path* and *XMLTV URL* to
-     `https://maurizio-lattuada.github.io/TV7_EPG/epg.xml.gz`. The playlist also points
-     to the guide through `url-tvg`, so this step is optional but explicit is safer.
-   * **Channel logos:** *Remote path*. The logos come from the playlist.
+    * **General:** set *Location* to *Remote path (Internet address)* and *M3U playlist URL*
+      to `https://maurizio-lattuada.github.io/TV7_EPG/playlist.m3u`.
+    * **EPG:** set *Location* to *Remote path* and *XMLTV URL* to
+      `https://maurizio-lattuada.github.io/TV7_EPG/epg.xml.gz`. The playlist also points
+      to the guide through `url-tvg`, so this step is optional but explicit is safer.
+    * **Channel logos:** *Remote path*. The logos come from the playlist.
 3. Restart Kodi, or disable and re-enable the add-on.
 
 The streams are Init7's multicast addresses (`udp://@…`), so **they only play on an Init7
@@ -63,7 +63,7 @@ uv run pytest        # or: pip install pytest && python -m pytest
 
 `.github/workflows/epg.yml` runs:
 
-* every day at **00:00 UTC**. GitHub sometimes starts scheduled jobs a few minutes late,
+* every Sunday at **18:00 UTC**. GitHub sometimes starts scheduled jobs a few minutes late,
 * on every push to `main`,
 * manually, via *Actions → Build and publish EPG → Run workflow*.
 
@@ -74,7 +74,8 @@ only run the tests. The generated files are never committed, so the repository s
 
 The Init7 EPG API (`api.tv.init7.net`) requires authentication. Requests from Init7
 customer connections are accepted without a login; everything else, including GitHub's own
-runners, gets **HTTP 403** `{"detail":"Authentication credentials were not provided."}`. The generation step therefore runs
+runners, gets **HTTP 403** `{"detail":"Authentication credentials were not provided."}`. The generation step therefore
+runs
 on a **self-hosted runner on a Mac connected through Init7** (labels `self-hosted`, `macOS`).
 Tests and the Pages deployment still run on GitHub-hosted runners.
 
@@ -88,10 +89,10 @@ Tests and the Pages deployment still run on GitHub-hosted runners.
    macOS*, run the commands shown there, then install it as a background service with
    `./svc.sh install && ./svc.sh start`. The runner needs [uv](https://docs.astral.sh/uv/)
    on its `PATH`; uv downloads the right Python version itself.
-4. The Mac must be awake at 00:00 UTC. If it is off or asleep, the job waits in the queue
-   until the runner is back. A queued job is cancelled after 24 hours. To wake the Mac
-   every night: `sudo pmset repeat wakeorpoweron MTWRFSU 00:55:00`. That is Swiss local
-   time, so it is just before 00:00 UTC in winter (01:00) and summer (02:00).
+4. The Mac must be awake at 18:00 UTC on Sunday. If it is off or asleep, the job waits in the queue
+   until the runner is back. A queued job is canceled after 24 hours. To wake the Mac:
+   `sudo pmset repeat wakeorpoweron MTWRFSU 17:55:00`. That is Swiss local
+   time, so it is just before 18:00 UTC in winter (19:00) and summer (20:00).
 
 ## Layout
 

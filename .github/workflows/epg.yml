@@ -6,7 +6,8 @@ name: Build and publish EPG
 
 on:
   schedule:
-    - cron: "0 0 * * *" # every day at 00:00 UTC (GitHub may start it a few minutes late)
+    - cron: "0 18 * * 0" # every Sunday at 18:00 UTC (GitHub may start it a few minutes late)
+      timezone: "UTC"
   workflow_dispatch:
   push:
     branches: [main]
